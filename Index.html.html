@@ -1,0 +1,754 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Image Prompt Generator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 25px;
+            padding: 40px;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.15);
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 3em;
+            font-weight: 800;
+            background: linear-gradient(135deg, #667eea, #764ba2, #f093fb);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 40px;
+            text-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        .form-section {
+            background: rgba(255, 255, 255, 0.8);
+            padding: 25px;
+            border-radius: 20px;
+            border: 2px solid rgba(102, 126, 234, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .form-section:hover {
+            border-color: rgba(102, 126, 234, 0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .section-title {
+            font-size: 1.4em;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-icon {
+            font-size: 1.2em;
+        }
+
+        label {
+            display: block;
+            font-weight: 600;
+            color: #555;
+            margin-bottom: 8px;
+            font-size: 0.95em;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e1e5e9;
+            border-radius: 12px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.9);
+            margin-bottom: 15px;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            background: white;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .checkbox-group {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            background: rgba(255, 255, 255, 0.6);
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .checkbox-item:hover {
+            background: rgba(102, 126, 234, 0.1);
+        }
+
+        .checkbox-item input[type="checkbox"] {
+            width: auto;
+            margin: 0;
+        }
+
+        .weight-controls {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .weight-slider {
+            flex: 1;
+        }
+
+        .weight-value {
+            min-width: 60px;
+            text-align: center;
+            font-weight: 600;
+            color: #667eea;
+        }
+
+        .generate-section {
+            text-align: center;
+            margin-top: 40px;
+            padding: 30px;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
+            border-radius: 20px;
+        }
+
+        .generate-btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 18px 40px;
+            font-size: 18px;
+            font-weight: 700;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+        }
+
+        .generate-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 40px rgba(102, 126, 234, 0.4);
+        }
+
+        .prompt-output {
+            margin-top: 30px;
+            padding: 25px;
+            background: #1a1a1a;
+            color: #00ff41;
+            border-radius: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 16px;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            min-height: 120px;
+            border: 2px solid #333;
+            position: relative;
+        }
+
+        .copy-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .copy-btn:hover {
+            background: #5a6fd8;
+        }
+
+        .quick-presets {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .preset-btn {
+            padding: 10px 15px;
+            background: rgba(102, 126, 234, 0.1);
+            border: 2px solid rgba(102, 126, 234, 0.3);
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 14px;
+            font-weight: 600;
+            color: #667eea;
+        }
+
+        .preset-btn:hover {
+            background: rgba(102, 126, 234, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .tips {
+            background: linear-gradient(135deg, rgba(240, 147, 251, 0.1), rgba(245, 87, 108, 0.1));
+            padding: 20px;
+            border-radius: 15px;
+            margin-top: 30px;
+            border-left: 5px solid #f093fb;
+        }
+
+        .tips h3 {
+            color: #f093fb;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+        }
+
+        .tips ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .tips li {
+            margin-bottom: 8px;
+            padding-left: 20px;
+            position: relative;
+        }
+
+        .tips li:before {
+            content: "?";
+            position: absolute;
+            left: 0;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+            }
+            
+            h1 {
+                font-size: 2em;
+            }
+            
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .checkbox-group {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>?? AI Image Prompt Generator</h1>
+        
+        <div class="quick-presets">
+            <button class="preset-btn" onclick="loadPreset('portrait')">Portrait</button>
+            <button class="preset-btn" onclick="loadPreset('landscape')">Landscape</button>
+            <button class="preset-btn" onclick="loadPreset('fantasy')">Fantasy</button>
+            <button class="preset-btn" onclick="loadPreset('scifi')">Sci-Fi</button>
+            <button class="preset-btn" onclick="loadPreset('anime')">Anime</button>
+            <button class="preset-btn" onclick="loadPreset('photorealistic')">Photo Real</button>
+            <button class="preset-btn" onclick="loadPreset('abstract')">Abstract</button>
+            <button class="preset-btn" onclick="loadPreset('clear')">Clear All</button>
+        </div>
+
+        <div class="form-grid">
+            <!-- Subject Section -->
+            <div class="form-section">
+                <h3 class="section-title"><span class="section-icon">??</span>Subject & Content</h3>
+                <label for="mainSubject">Main Subject:</label>
+                <input type="text" id="mainSubject" placeholder="e.g., a beautiful woman, majestic lion, futuristic city">
+                
+                <label for="details">Additional Details:</label>
+                <textarea id="details" placeholder="Describe specific features, actions, expressions..."></textarea>
+                
+                <label for="composition">Composition:</label>
+                <select id="composition">
+                    <option value="">Select composition...</option>
+                    <option value="close-up portrait">Close-up Portrait</option>
+                    <option value="full body shot">Full Body Shot</option>
+                    <option value="wide landscape">Wide Landscape</option>
+                    <option value="bird's eye view">Bird's Eye View</option>
+                    <option value="low angle">Low Angle</option>
+                    <option value="high angle">High Angle</option>
+                    <option value="rule of thirds">Rule of Thirds</option>
+                    <option value="centered composition">Centered Composition</option>
+                </select>
+            </div>
+
+            <!-- Style & Artistic Section -->
+            <div class="form-section">
+                <h3 class="section-title"><span class="section-icon">??</span>Style & Artistic</h3>
+                <label for="artStyle">Art Style:</label>
+                <select id="artStyle">
+                    <option value="">Select style...</option>
+                    <option value="photorealistic">Photorealistic</option>
+                    <option value="hyperrealistic">Hyperrealistic</option>
+                    <option value="digital art">Digital Art</option>
+                    <option value="oil painting">Oil Painting</option>
+                    <option value="watercolor">Watercolor</option>
+                    <option value="pencil sketch">Pencil Sketch</option>
+                    <option value="anime style">Anime Style</option>
+                    <option value="cartoon">Cartoon</option>
+                    <option value="concept art">Concept Art</option>
+                    <option value="fantasy art">Fantasy Art</option>
+                    <option value="cyberpunk">Cyberpunk</option>
+                    <option value="steampunk">Steampunk</option>
+                    <option value="art nouveau">Art Nouveau</option>
+                    <option value="impressionist">Impressionist</option>
+                    <option value="surreal">Surreal</option>
+                </select>
+
+                <label for="artist">Artist Style (optional):</label>
+                <input type="text" id="artist" placeholder="e.g., Greg Rutkowski, Artgerm, Stanley Kubrick">
+            </div>
+
+            <!-- Lighting & Atmosphere -->
+            <div class="form-section">
+                <h3 class="section-title"><span class="section-icon">??</span>Lighting & Mood</h3>
+                <label for="lighting">Lighting:</label>
+                <select id="lighting">
+                    <option value="">Select lighting...</option>
+                    <option value="golden hour">Golden Hour</option>
+                    <option value="blue hour">Blue Hour</option>
+                    <option value="dramatic lighting">Dramatic Lighting</option>
+                    <option value="soft lighting">Soft Lighting</option>
+                    <option value="hard lighting">Hard Lighting</option>
+                    <option value="backlighting">Backlighting</option>
+                    <option value="rim lighting">Rim Lighting</option>
+                    <option value="studio lighting">Studio Lighting</option>
+                    <option value="natural lighting">Natural Lighting</option>
+                    <option value="neon lighting">Neon Lighting</option>
+                    <option value="candlelight">Candlelight</option>
+                    <option value="volumetric lighting">Volumetric Lighting</option>
+                </select>
+
+                <label for="mood">Mood & Atmosphere:</label>
+                <input type="text" id="mood" placeholder="e.g., mysterious, serene, epic, melancholic">
+
+                <label for="weather">Weather/Environment:</label>
+                <input type="text" id="weather" placeholder="e.g., misty, stormy, sunny, foggy">
+            </div>
+
+            <!-- Colors & Visual -->
+            <div class="form-section">
+                <h3 class="section-title"><span class="section-icon">??</span>Colors & Visual</h3>
+                <label for="colorScheme">Color Scheme:</label>
+                <input type="text" id="colorScheme" placeholder="e.g., vibrant colors, monochromatic, warm tones">
+
+                <label for="camera">Camera/Technical:</label>
+                <select id="camera">
+                    <option value="">Select camera style...</option>
+                    <option value="DSLR">DSLR</option>
+                    <option value="film photography">Film Photography</option>
+                    <option value="medium format">Medium Format</option>
+                    <option value="35mm">35mm</option>
+                    <option value="macro lens">Macro Lens</option>
+                    <option value="wide angle lens">Wide Angle Lens</option>
+                    <option value="telephoto lens">Telephoto Lens</option>
+                    <option value="fisheye lens">Fisheye Lens</option>
+                    <option value="bokeh">Bokeh</option>
+                    <option value="shallow depth of field">Shallow DOF</option>
+                    <option value="deep depth of field">Deep DOF</option>
+                </select>
+
+                <label for="resolution">Quality/Resolution:</label>
+                <div class="checkbox-group">
+                    <label class="checkbox-item">
+                        <input type="checkbox" value="8K resolution"> 8K Resolution
+                    </label>
+                    <label class="checkbox-item">
+                        <input type="checkbox" value="highly detailed"> Highly Detailed
+                    </label>
+                    <label class="checkbox-item">
+                        <input type="checkbox" value="sharp focus"> Sharp Focus
+                    </label>
+                    <label class="checkbox-item">
+                        <input type="checkbox" value="professional"> Professional
+                    </label>
+                </div>
+            </div>
+
+            <!-- Platform Specific -->
+            <div class="form-section">
+                <h3 class="section-title"><span class="section-icon">??</span>Platform & Settings</h3>
+                <label for="platform">Target Platform:</label>
+                <select id="platform">
+                    <option value="general">General</option>
+                    <option value="midjourney">Midjourney</option>
+                    <option value="nightcafe">Night Cafe</option>
+                    <option value="dalle">DALL-E</option>
+                    <option value="stable-diffusion">Stable Diffusion</option>
+                </select>
+
+                <label for="aspectRatio">Aspect Ratio:</label>
+                <select id="aspectRatio">
+                    <option value="">Default</option>
+                    <option value="--ar 16:9">16:9 (Landscape)</option>
+                    <option value="--ar 9:16">9:16 (Portrait)</option>
+                    <option value="--ar 1:1">1:1 (Square)</option>
+                    <option value="--ar 4:3">4:3 (Standard)</option>
+                    <option value="--ar 3:2">3:2 (Photo)</option>
+                    <option value="--ar 21:9">21:9 (Ultrawide)</option>
+                </select>
+
+                <label for="styleWeight">Style Weight:</label>
+                <div class="weight-controls">
+                    <input type="range" id="styleWeight" class="weight-slider" min="0" max="1000" value="100" step="50">
+                    <span class="weight-value" id="styleWeightValue">100</span>
+                </div>
+
+                <label for="negativePrompt">Negative Prompt:</label>
+                <textarea id="negativePrompt" placeholder="Things to avoid: blurry, low quality, distorted..."></textarea>
+            </div>
+
+            <!-- Advanced Settings -->
+            <div class="form-section">
+                <h3 class="section-title"><span class="section-icon">??</span>Advanced</h3>
+                <label for="customParams">Custom Parameters:</label>
+                <input type="text" id="customParams" placeholder="e.g., --chaos 50, --stylize 750">
+
+                <label>Quality Enhancers:</label>
+                <div class="checkbox-group">
+                    <label class="checkbox-item">
+                        <input type="checkbox" value="masterpiece"> Masterpiece
+                    </label>
+                    <label class="checkbox-item">
+                        <input type="checkbox" value="award winning"> Award Winning
+                    </label>
+                    <label class="checkbox-item">
+                        <input type="checkbox" value="trending on artstation"> Trending on ArtStation
+                    </label>
+                    <label class="checkbox-item">
+                        <input type="checkbox" value="unreal engine"> Unreal Engine
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <div class="generate-section">
+            <button class="generate-btn" onclick="generatePrompt()">?? Generate Prompt</button>
+            
+            <div class="prompt-output" id="promptOutput">
+                <button class="copy-btn" onclick="copyPrompt()">Copy</button>
+                Your generated prompt will appear here...
+            </div>
+        </div>
+
+        <div class="tips">
+            <h3>?? Pro Tips for Better Results</h3>
+            <ul>
+                <li>Be specific but not overly complex - aim for 50-100 words</li>
+                <li>Put the most important elements first in your prompt</li>
+                <li>Use commas to separate different concepts</li>
+                <li>Experiment with artist names to get specific styles</li>
+                <li>Negative prompts help exclude unwanted elements</li>
+                <li>Higher style weights create more stylized results</li>
+                <li>Try different aspect ratios for various compositions</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        // Update style weight display
+        document.getElementById('styleWeight').addEventListener('input', function() {
+            document.getElementById('styleWeightValue').textContent = this.value;
+        });
+
+        // Preset configurations
+        const presets = {
+            portrait: {
+                mainSubject: 'beautiful woman',
+                details: 'expressive eyes, elegant pose, professional headshot',
+                composition: 'close-up portrait',
+                artStyle: 'photorealistic',
+                lighting: 'soft lighting',
+                mood: 'serene, confident',
+                colorScheme: 'warm tones',
+                camera: 'DSLR',
+                aspectRatio: '--ar 9:16',
+                negativePrompt: 'blurry, low quality, distorted face'
+            },
+            landscape: {
+                mainSubject: 'majestic mountain landscape',
+                details: 'rolling hills, pristine lake, dramatic clouds',
+                composition: 'wide landscape',
+                artStyle: 'photorealistic',
+                lighting: 'golden hour',
+                mood: 'epic, breathtaking',
+                weather: 'clear sky with dramatic clouds',
+                colorScheme: 'vibrant colors',
+                camera: 'wide angle lens',
+                aspectRatio: '--ar 16:9',
+                negativePrompt: 'people, buildings, urban elements'
+            },
+            fantasy: {
+                mainSubject: 'magical fairy in enchanted forest',
+                details: 'glowing wings, flowing dress, mystical aura',
+                composition: 'full body shot',
+                artStyle: 'fantasy art',
+                lighting: 'volumetric lighting',
+                mood: 'magical, ethereal',
+                weather: 'misty, enchanted atmosphere',
+                colorScheme: 'magical blues and purples',
+                artist: 'Greg Rutkowski',
+                aspectRatio: '--ar 9:16',
+                negativePrompt: 'realistic, modern elements'
+            },
+            scifi: {
+                mainSubject: 'futuristic cityscape',
+                details: 'neon lights, flying cars, towering buildings',
+                composition: 'bird\'s eye view',
+                artStyle: 'cyberpunk',
+                lighting: 'neon lighting',
+                mood: 'futuristic, high-tech',
+                weather: 'rain, atmospheric',
+                colorScheme: 'neon blues and purples',
+                camera: 'wide angle lens',
+                aspectRatio: '--ar 16:9',
+                negativePrompt: 'natural elements, vintage, old-fashioned'
+            },
+            anime: {
+                mainSubject: 'anime girl character',
+                details: 'large expressive eyes, colorful hair, school uniform',
+                composition: 'close-up portrait',
+                artStyle: 'anime style',
+                lighting: 'soft lighting',
+                mood: 'cheerful, vibrant',
+                colorScheme: 'bright vibrant colors',
+                aspectRatio: '--ar 9:16',
+                negativePrompt: 'realistic, 3D, photographic'
+            },
+            photorealistic: {
+                mainSubject: 'professional model',
+                details: 'perfect lighting, studio quality, high fashion',
+                composition: 'rule of thirds',
+                artStyle: 'hyperrealistic',
+                lighting: 'studio lighting',
+                mood: 'professional, polished',
+                colorScheme: 'natural colors',
+                camera: 'medium format',
+                aspectRatio: '--ar 4:3',
+                negativePrompt: 'cartoon, anime, painting, sketch'
+            },
+            abstract: {
+                mainSubject: 'abstract composition',
+                details: 'flowing forms, geometric patterns, color gradients',
+                composition: 'centered composition',
+                artStyle: 'digital art',
+                lighting: 'dramatic lighting',
+                mood: 'dynamic, energetic',
+                colorScheme: 'rainbow colors',
+                aspectRatio: '--ar 1:1',
+                negativePrompt: 'realistic objects, people, landscapes'
+            }
+        };
+
+        function loadPreset(presetName) {
+            if (presetName === 'clear') {
+                clearForm();
+                return;
+            }
+
+            const preset = presets[presetName];
+            if (!preset) return;
+
+            // Clear form first
+            clearForm();
+
+            // Load preset values
+            Object.keys(preset).forEach(key => {
+                const element = document.getElementById(key);
+                if (element) {
+                    element.value = preset[key];
+                }
+            });
+        }
+
+        function clearForm() {
+            // Clear all inputs
+            document.querySelectorAll('input[type="text"], textarea, select').forEach(el => {
+                el.value = '';
+            });
+            
+            // Uncheck all checkboxes
+            document.querySelectorAll('input[type="checkbox"]').forEach(el => {
+                el.checked = false;
+            });
+            
+            // Reset slider
+            document.getElementById('styleWeight').value = 100;
+            document.getElementById('styleWeightValue').textContent = '100';
+        }
+
+        function generatePrompt() {
+            const elements = [];
+            
+            // Main subject (most important)
+            const mainSubject = document.getElementById('mainSubject').value.trim();
+            if (mainSubject) elements.push(mainSubject);
+            
+            // Additional details
+            const details = document.getElementById('details').value.trim();
+            if (details) elements.push(details);
+            
+            // Composition
+            const composition = document.getElementById('composition').value;
+            if (composition) elements.push(composition);
+            
+            // Art style
+            const artStyle = document.getElementById('artStyle').value;
+            if (artStyle) elements.push(artStyle);
+            
+            // Artist
+            const artist = document.getElementById('artist').value.trim();
+            if (artist) elements.push(`by ${artist}`);
+            
+            // Lighting
+            const lighting = document.getElementById('lighting').value;
+            if (lighting) elements.push(lighting);
+            
+            // Mood
+            const mood = document.getElementById('mood').value.trim();
+            if (mood) elements.push(mood);
+            
+            // Weather
+            const weather = document.getElementById('weather').value.trim();
+            if (weather) elements.push(weather);
+            
+            // Color scheme
+            const colorScheme = document.getElementById('colorScheme').value.trim();
+            if (colorScheme) elements.push(colorScheme);
+            
+            // Camera
+            const camera = document.getElementById('camera').value;
+            if (camera) elements.push(camera);
+            
+            // Quality enhancers
+            const qualityBoxes = document.querySelectorAll('input[type="checkbox"]:checked');
+            qualityBoxes.forEach(box => {
+                elements.push(box.value);
+            });
+            
+            // Build main prompt
+            let prompt = elements.join(', ');
+            
+            // Add platform-specific parameters
+            const platform = document.getElementById('platform').value;
+            const aspectRatio = document.getElementById('aspectRatio').value;
+            const styleWeight = document.getElementById('styleWeight').value;
+            const customParams = document.getElementById('customParams').value.trim();
+            
+            // Platform-specific formatting
+            if (platform === 'midjourney' && styleWeight !== '100') {
+                prompt += ` --stylize ${styleWeight}`;
+            }
+            
+            if (aspectRatio) {
+                prompt += ` ${aspectRatio}`;
+            }
+            
+            if (customParams) {
+                prompt += ` ${customParams}`;
+            }
+            
+            // Negative prompt
+            const negativePrompt = document.getElementById('negativePrompt').value.trim();
+            if (negativePrompt) {
+                if (platform === 'midjourney') {
+                    prompt += ` --no ${negativePrompt}`;
+                } else {
+                    prompt += `\n\nNegative prompt: ${negativePrompt}`;
+                }
+            }
+            
+            // Display result
+            const output = document.getElementById('promptOutput');
+            output.textContent = prompt || 'Please fill in at least the main subject to generate a prompt.';
+            
+            // Add some visual feedback
+            output.style.border = '2px solid #4CAF50';
+            setTimeout(() => {
+                output.style.border = '2px solid #333';
+            }, 2000);
+        }
+
+        function copyPrompt() {
+            const promptText = document.getElementById('promptOutput').textContent;
+            if (promptText && promptText !== 'Your generated prompt will appear here...') {
+                navigator.clipboard.writeText(promptText).then(() => {
+                    const btn = document.querySelector('.copy-btn');
+                    const originalText = btn.textContent;
+                    btn.textContent = 'Copied!';
+                    btn.style.background = '#4CAF50';
+                    setTimeout(() => {
+                        btn.textContent = originalText;
+                        btn.style.background = '#667eea';
+                    }, 2000);
+                });
+            }
+        }
+
+        // Initialize with a default example
+        window.addEventListener('load', () => {
+            // Set a simple example to show how it works
+            document.getElementById('mainSubject').value = 'majestic lion';
+            document.getElementById('artStyle').value = 'photorealistic';
+            document.getElementById('lighting').value = 'golden hour';
+            generatePrompt();
+        });
+    </script>
+</body>
+</html>
